@@ -2,6 +2,7 @@
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 import time
+import xml.etree.ElementTree as ET
 
 def extract_links(url):
     try:
@@ -16,15 +17,34 @@ def extract_links(url):
         print(f'Error accessing {url}: {e}')
         return []
 
+def extract_links_from_sitemap(url):
+    try:
+        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        response = urlopen(req)
+        xml_content = response.read()
+        root = ET.fromstring(xml_content)
+
+        links = [loc.text for loc in root.findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+        return links
+    except Exception as e:
+        print(f'Error accessing {url}: {e}')
+        return []
+
+
 def write_to_file(urls):
     with open('crawled_webpages.txt', 'a') as file:
         for url in urls:
             file.write(url + '\n')
 
-def crawl_website(start_url, max_urls=5, max_links_per_page=5):
+def crawl_website(start_url, max_urls=50, max_links_per_page=5):
     explored_urls = set()  # Use a set to store unique URLs
     to_explore_urls = [start_url]
-    
+
+    # Extract links from sitemap.xml if available
+    sitemap_url = start_url.rstrip('/') + '/sitemap.xml'
+    sitemap_links = extract_links_from_sitemap(sitemap_url)
+    to_explore_urls.extend(sitemap_links)
+
     while len(explored_urls) < max_urls and to_explore_urls:
         current_url = to_explore_urls.pop(0)
 
