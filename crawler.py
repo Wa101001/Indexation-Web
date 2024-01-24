@@ -1,4 +1,5 @@
 # crawler.py
+from crawl_delay import check_robots_txt
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 import time
@@ -10,7 +11,6 @@ def extract_links(url):
         response = urlopen(req)
         html_content = response.read()
         soup = BeautifulSoup(html_content, 'html.parser')
-
         links = [a['href'] for a in soup.find_all('a', href=True) if a['href'].startswith('https://')]
         return links
     except Exception as e:
@@ -36,8 +36,11 @@ def write_to_file(urls):
         for url in urls:
             file.write(url + '\n')
 
-def crawl_website(start_url, max_urls=50, max_links_per_page=5):
-    explored_urls = set()  # Use a set to store unique URLs
+# Import the check_robots_txt function
+from crawl_delay import check_robots_txt
+
+def crawl_website(start_url, max_urls=100, max_links_per_page=10):
+    explored_urls = set()
     to_explore_urls = [start_url]
 
     # Extract links from sitemap.xml if available
@@ -52,19 +55,25 @@ def crawl_website(start_url, max_urls=50, max_links_per_page=5):
         if current_url in explored_urls:
             continue
 
+        # Check if the site allows crawling based on robots.txt
+        crawl_delay = check_robots_txt(current_url)
+
+        # If crawl_delay is None, set it to 5 seconds
+        crawl_delay = crawl_delay if crawl_delay is not None else 5
+
+        print(f"Crawling {current_url} with a delay of {crawl_delay} seconds")
+        time.sleep(crawl_delay)
+
         links_on_page = extract_links(current_url)[:max_links_per_page]
 
         for link in links_on_page:
             if link not in explored_urls and link not in to_explore_urls:
                 to_explore_urls.append(link)
 
-        # Add the current URL to the set of explored URLs
         explored_urls.add(current_url)
 
-        # Wait for at least five seconds before making the next request
         time.sleep(5)
 
-    # Write unique URLs to the file
     write_to_file(explored_urls)
 
     print(f'Exploration terminée. {len(explored_urls)} URLs ont été trouvées et téléchargées.')
