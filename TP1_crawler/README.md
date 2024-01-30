@@ -13,8 +13,8 @@
 To use this crawler, you need to have Python installed on your system. Clone the repository and install the required dependencies.
 
 ```bash
-git clone https://github.com/Wa101001/crawler.git
-cd crawler
+git clone https://github.com/Wa101001/Indexation-Web.git
+cd Indexation-Web
 pip install requests beautifulsoup4 urllib3 click
 ```
 
