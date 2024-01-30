@@ -22,6 +22,6 @@ pip install requests beautifulsoup4 urllib3 click
 Run `main.py` with the starting URL and the maximum number of URLs to crawl. For example:
 
 ```bash
-python main.py --url https://www.ensai.fr --max-urls 50
+python main.py --url TP1_crawler https://www.ensai.fr --max-urls 50
 ```
 
