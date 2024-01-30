@@ -1,7 +1,7 @@
 # Crawler
 
 ## Overview
-"Crawler" is a web crawler application developed in Python specifically created as a part of an academic project for engineering students at ENSAI. It is associated with the course "Indexation Web" instructed by Lara Perinetti, an NLP tech lead. The developer of this project is Wajih Hammouda aDeveloped by Wajih Hammouda (GitHub: [Wa101001](https://github.com/Wa101001)), this project demonstrates the principles of web crawling, multi-threaded processing and compliance with website crawling policies.
+"Crawler" is a web crawler application developed in Python specifically created as a part of an academic project for engineering students at ENSAI. It is associated with the course "Indexation Web" instructed by Lara Perinetti, an NLP tech lead. Developed by Wajih Hammouda (GitHub: [Wa101001](https://github.com/Wa101001)), this project demonstrates the principles of web crawling, multi-threaded processing and compliance with website crawling policies.
 
 ## Features
 - **Multi-threaded Web Crawling:** Efficiently crawls websites using multiple threads to speed up the process.
