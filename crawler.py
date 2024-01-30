@@ -1,79 +1,65 @@
-# crawler.py
-from crawl_delay import check_robots_txt
-from urllib.request import urlopen, Request
+import requests
 from bs4 import BeautifulSoup
 import time
-import xml.etree.ElementTree as ET
+from urllib.robotparser import RobotFileParser
+from urllib.parse import urlparse, urljoin
 
-def extract_links(url):
-    try:
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        response = urlopen(req)
-        html_content = response.read()
-        soup = BeautifulSoup(html_content, 'html.parser')
-        links = [a['href'] for a in soup.find_all('a', href=True) if a['href'].startswith('https://')]
-        return links
-    except Exception as e:
-        print(f'Error accessing {url}: {e}')
+def crawl_web(start_url, max_urls):
+
+    # Initialize our variables which are the urls to crawl and a set of variables to keep only unique values
+    urls_to_crawl = [start_url]
+    crawled_urls = set()
+
+    # Check robots.txt
+    if not check_robots_txt(start_url):
         return []
 
-def extract_links_from_sitemap(url):
-    try:
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        response = urlopen(req)
-        xml_content = response.read()
-        root = ET.fromstring(xml_content)
+    with open("crawled_webpages.txt", "w") as f:
+        while len(crawled_urls) < max_urls and urls_to_crawl:
+            # Get next URL to crawl
+            url = urls_to_crawl.pop(0)
 
-        links = [loc.text for loc in root.findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
-        return links
-    except Exception as e:
-        print(f'Error accessing {url}: {e}')
-        return []
+            # Skip URL if already crawled
+            if url in crawled_urls:
+                continue
 
+            if check_robots_txt(url):
+                try:
+                    page = requests.get(url)
+                    page.raise_for_status()  # Check for HTTP errors
+                    soup = BeautifulSoup(page.content, "html.parser")
+                except requests.RequestException:
+                    continue
 
-def write_to_file(urls):
-    with open('crawled_webpages.txt', 'a') as file:
-        for url in urls:
-            file.write(url + '\n')
+                # Extract links
+                links = extract_links(soup)
 
-# Import the check_robots_txt function
-from crawl_delay import check_robots_txt
+                # Convert relative URLs to absolute URLs
+                links = [urljoin(url, link) for link in links]
 
-def crawl_website(start_url, max_urls=100, max_links_per_page=10):
-    explored_urls = set()
-    to_explore_urls = [start_url]
+                urls_to_crawl.extend(links)
 
-    # Extract links from sitemap.xml if available
-    sitemap_url = start_url.rstrip('/') + '/sitemap.xml'
-    sitemap_links = extract_links_from_sitemap(sitemap_url)
-    to_explore_urls.extend(sitemap_links)
+                # Add URL to crawled set
+                crawled_urls.add(url)
 
-    while len(explored_urls) < max_urls and to_explore_urls:
-        current_url = to_explore_urls.pop(0)
+                # Write URL to file
+                f.write(url + "\n")
 
-        # Skip if the URL has already been explored
-        if current_url in explored_urls:
-            continue
+                # Wait for 5 seconds
+                time.sleep(5)
+            else:
+                continue
 
-        # Check if the site allows crawling based on robots.txt
-        crawl_delay = check_robots_txt(current_url)
+    return list(crawled_urls)
 
-        # If crawl_delay is None, set it to 5 seconds
-        crawl_delay = crawl_delay if crawl_delay is not None else 5
+def check_robots_txt(url):
+    # Initialize robot parser
+    rp = RobotFileParser()
+    rp.set_url(urljoin(url, "/robots.txt"))
+    rp.read()
+    # Check if URL is allowed to be crawled
+    return rp.can_fetch("*", url)
 
-        print(f"Crawling {current_url} with a delay of {crawl_delay} seconds")
-        time.sleep(crawl_delay)
-
-        links_on_page = extract_links(current_url)[:max_links_per_page]
-
-        for link in links_on_page:
-            if link not in explored_urls and link not in to_explore_urls:
-                to_explore_urls.append(link)
-
-        explored_urls.add(current_url)
-
-        time.sleep(5)
-
-    write_to_file(explored_urls)
-
-    print(f'Exploration terminée. {len(explored_urls)} URLs ont été trouvées et téléchargées.')
+def extract_links(soup):
+    links = [link.get("href") for link in soup.find_all("a") if link.get("href")]
+    return links
