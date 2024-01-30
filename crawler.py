@@ -1,147 +1,112 @@
 import requests
 from bs4 import BeautifulSoup
-import time
 from urllib.robotparser import RobotFileParser
 from urllib.parse import urlparse, urljoin
-from urllib.request import urlopen
 from concurrent.futures import ThreadPoolExecutor
+from collections import deque
+import threading
+import time
 
+class WebCrawler:
+    # Constructor: initializes the crawler with the start URL, max URLs to crawl and max worker threads
+    def __init__(self, start_url, max_urls, max_workers=10):
+        self.start_url = start_url
+        self.max_urls = max_urls
+        self.max_workers = max_workers
+        self.urls_to_crawl = deque([start_url])  # Queue of URLs to crawl
+        self.crawled_urls = set()  # Set of crawled URLs to avoid duplication
+        self.last_crawled_domain = None  # Tracks the domain of the last crawled URL
+        self.last_crawl_delay = None  # Stores delay as mentioed by the robots.txt of the current domain
+        self.lock = threading.Lock()  # Lock for threadsafe writing to the file 
 
-# Global variables to store the last crawled domain and its crawl delay
-last_crawled_domain = None
-last_crawl_delay = None
+    # Main method to start crawling process
+    def crawl_web(self):
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            while len(self.crawled_urls) < self.max_urls and self.urls_to_crawl:
+                url = self.urls_to_crawl.popleft()
 
-def crawl_web(start_url, max_urls, max_workers=5):
-    global last_crawled_domain, last_crawl_delay
+                if url in self.crawled_urls:
+                    continue  # Skip the URL if it's already crawled
 
-    # Initialize variables
-    urls_to_crawl = [start_url]
-    crawled_urls = set()
-
-    with open("crawled_webpages.txt", "w") as f:
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            while len(crawled_urls) < max_urls and urls_to_crawl:
-                # Get next URL to crawl
-                url = urls_to_crawl.pop(0)
-
-                # Skip URL if already crawled
-                if url in crawled_urls:
-                    continue
-
-                # Extract domain from the current URL
                 current_domain = urlparse(url).netloc
 
-                # Check if the domain has changed since the last crawl
-                if current_domain != last_crawled_domain:
-                    # If the domain has changed, update last_crawled_domain and last_crawl_delay
-                    last_crawled_domain = current_domain
-                    last_crawl_delay = None  # Reset last_crawl_delay
+                # Check if domain changed and update crawl delay
+                if current_domain != self.last_crawled_domain:
+                    self.last_crawled_domain = current_domain
+                    self.last_crawl_delay = self.get_crawl_delay(url)
 
-                    # Check robots.txt for the new domain
-                    if not check_robots_txt(url):
+                    # Skip URL if not allowed by robots.txt
+                    if not self.check_robots_txt(url):
                         continue
 
-                # Submit the crawling task to the ThreadPoolExecutor
-                future = executor.submit(crawl_url, url, f)
+                # Execute crawl_url in a separate thread
+                future = executor.submit(self.crawl_url, url)
 
-                # Attempt to get sitemap URLs from robots.txt
-                sitemap_urls = extract_urls_from_sitemap(url)
-                urls_to_crawl.extend(sitemap_urls)
+                try:
+                    # Extract and queue URLs from the sitemap
+                    sitemap_urls = self.extract_urls_from_sitemap(url)
+                    self.urls_to_crawl.extend(sitemap_urls)
+                except Exception as e:
+                    print(f"Error extracting URLs from sitemap: {e}")
 
-                # Extract links asynchronously and add them to the URL queue
-                link_futures = [executor.submit(extract_links_from_url, link) for link in sitemap_urls]
+        return self.crawled_urls
 
-                # Wait for all link extraction tasks to complete
-                for link_future in link_futures:
-                    links = link_future.result()
-                    urls_to_crawl.extend(links)
+    # Method to crawl a single URL
+    def crawl_url(self, url):
+        delay = self.last_crawl_delay if self.last_crawl_delay is not None else 3 # Delay = 3 if the robot.txt doesn't specify
+        time.sleep(delay)  # Respect crawl delay
 
-                # Add URL to crawled set
-                crawled_urls.add(url)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
 
-                # Wait for the crawling task to complete
-                future.result()
+            soup = BeautifulSoup(response.content, "html.parser")
+            links = self.extract_links(soup)
+            links = [urljoin(url, link) for link in links]
 
-    return list(crawled_urls)
+            # Thread-safe writing to the file
+            with self.lock:
+                self.crawled_urls.add(url)
+                with open("crawled_webpages.txt", "a") as f:
+                    f.write(url + "\n")
 
-def crawl_url(url, file_handle):
-    try:
-        # Check and respect crawl delay from robots.txt
-        crawl_delay = get_crawl_delay(url)
-        if crawl_delay is not None:
-            time.sleep(crawl_delay)
-        else:
-            # If no crawl delay is specified, wait for 5 seconds
-            time.sleep(5)
+            return links
+        except requests.RequestException:
+            return []
 
-        page = requests.get(url)
-        page.raise_for_status()  # Check for HTTP errors
-        soup = BeautifulSoup(page.content, "html.parser")
-
-        # Extract links
-        links = extract_links(soup)
-
-        # Convert relative URLs to absolute URLs
-        links = [urljoin(url, link) for link in links]
-
-        # Write URL to file
-        file_handle.write(url + "\n")
-
-    except requests.RequestException:
-        pass
-
-    
-def get_crawl_delay(url):
-    # Initialize robot parser
-    rp = RobotFileParser()
-    rp.set_url(urljoin(url, "/robots.txt"))
-    rp.read()
-
-    # Check if the current domain has a crawl delay specified
-    if rp.crawl_delay("*") is not None:
-        return rp.crawl_delay("*")
-    else:
-        return None
-def check_robots_txt(url):
-    # Initialize robot parser
-    rp = RobotFileParser()
-    rp.set_url(urljoin(url, "/robots.txt"))
-    rp.read()
-    # Check if URL is allowed to be crawled
-    return rp.can_fetch("*", url)
-
-def extract_links_from_url(url):
-    try:
-        page = requests.get(url)
-        page.raise_for_status()  # Check for HTTP errors
-        soup = BeautifulSoup(page.content, "html.parser")
-
-        # Extract links
-        links = extract_links(soup)
-
-        # Convert relative URLs to absolute URLs
-        links = [urljoin(url, link) for link in links]
-
+    # Extract a maximum of 5 links from each soup object 
+    def extract_links(self, soup):
+        links = [link.get("href") for link in soup.find_all("a", limit=5) if link.get("href")]
         return links
 
-    except requests.RequestException:
-        return []
+    # Get the crawl delay from robots.txt
+    def get_crawl_delay(self, url):
+        rp = RobotFileParser()
+        rp.set_url(urljoin(url, "/robots.txt"))
+        rp.read()
 
-def extract_links(soup):
-    links = [link.get("href") for link in soup.find_all("a") if link.get("href")]
-    return links
-def extract_urls_from_sitemap(url):
-    rp = RobotFileParser()
-    rp.set_url(urljoin(url, "/robots.txt"))
+        delay = rp.crawl_delay("*")
+        return delay if delay is not None else 3
 
-    try:
+    # Check if crawling is allowed by robots.txt
+    def check_robots_txt(self, url):
+        rp = RobotFileParser()
+        rp.set_url(urljoin(url, "/robots.txt"))
+        rp.read()
+        return rp.can_fetch("*", url)
+
+    # Extract URLs from the sitemap
+    def extract_urls_from_sitemap(self, url):
+        rp = RobotFileParser()
+        rp.set_url(urljoin(url, "/robots.txt"))
         rp.read()
         sitemaps = rp.site_maps()
+
         url_from_site_map = []
 
         for sitemap in sitemaps:
-            response = urlopen(sitemap)
-            soup = BeautifulSoup(response, 'lxml', from_encoding=response.info().get_param('charset'))
+            response = requests.get(sitemap)
+            soup = BeautifulSoup(response.content, 'lxml')
             urls = soup.find_all("url")
 
             for url in urls:
@@ -149,9 +114,3 @@ def extract_urls_from_sitemap(url):
                 url_from_site_map.append(loc)
 
         return url_from_site_map
-
-    except Exception as e:
-        print(f"Error extracting URLs from sitemap: {e}")
-        return []
-
-
