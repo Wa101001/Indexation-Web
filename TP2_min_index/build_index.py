@@ -15,7 +15,7 @@ def build_inverse_index(tokenized_titles):
 
 # Function to build a positional index from tokenized titles
 def build_positional_index(tokenized_titles):
-    # Empty dictionary
+    # Empty dictionary for the positional index
     positional_index = {}
     # Enumerate over the tokenized titles to get both doc_id and the tokens
     for doc_id, tokens in enumerate(tokenized_titles):
@@ -24,7 +24,12 @@ def build_positional_index(tokenized_titles):
             # Add the token to the positional index if not already present
             if token not in positional_index:
                 positional_index[token] = {}
-            # For each token, setdefault to initialize a list for the doc_id if not already present and append the current position to this list
-            positional_index[token].setdefault(doc_id, []).append(position)
+            # Initialize a sub-dictionary for the document if not already present
+            if doc_id not in positional_index[token]:
+                positional_index[token][doc_id] = {'positions': [], 'count': 0}
+            # Append the current position to the positions list
+            positional_index[token][doc_id]['positions'].append(position)
+            # Increment the count of occurrences
+            positional_index[token][doc_id]['count'] += 1
 
     return positional_index
