@@ -1,13 +1,15 @@
 # statistics.py
 
 import json
+import nltk
+
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+import unicodedata
 import re
-import nltk
 from collections import Counter
 
-# Make sure to download the necessary NLTK data
 
 
 def read_json_file(file_path):
@@ -16,8 +18,16 @@ def read_json_file(file_path):
     return data
 
 def preprocess_text(text):
+    # Normalize text to remove accents and diacritics
+    text = ''.join(c for c in unicodedata.normalize('NFD', text)
+                   if unicodedata.category(c) != 'Mn')
+    
     # Remove non-alphanumeric characters and lower the case
-    text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
+    text = re.sub(r'[^a-zA-Z0-9àâçéèêëîïôûùüÿñæœ]', ' ', text.lower())
+    
+    # Replace multiple spaces with a single space
+    text = re.sub(r'\s+', ' ', text).strip()
+    
     return text
 
 def tokenize_titles(data):
@@ -30,6 +40,23 @@ def tokenize_titles(data):
     # Remove stopwords
     tokenized_titles = [[word for word in title if word not in french_stopwords] for title in tokenized_titles]
     return tokenized_titles
+
+def tokenize_and_stem_titles(data):
+    additional_stopwords = {'a', 'e', 're', 'r'}
+    french_stopwords = set(stopwords.words('french')).union(additional_stopwords)
+    
+    stemmer = SnowballStemmer("french")
+    titles = [preprocess_text(item['title']) for item in data]
+    tokenized_titles = [word_tokenize(title, language='french') for title in titles]
+
+    # Remove stopwords and stem
+    stemmed_titles = []
+    for title in tokenized_titles:
+        stemmed_title = [stemmer.stem(word) for word in title if word not in french_stopwords]
+        stemmed_titles.append(stemmed_title)
+    
+    return stemmed_titles
+
 
 def generate_statistics(data, tokenized_titles, top_n=10, rare_n=10):
     num_documents = len(tokenized_titles)
@@ -49,4 +76,8 @@ def generate_statistics(data, tokenized_titles, top_n=10, rare_n=10):
     }
 
     return statistics
+
+
+
+
 

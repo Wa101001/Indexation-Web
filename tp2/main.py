@@ -1,12 +1,20 @@
 import json
-from statistics import read_json_file, tokenize_titles, generate_statistics, preprocess_text
-from build_index import build_inverse_index, save_index_to_json
-from stemmer import stem_text  # Import stem_text function from stemmer.py
+from statistics_and_stem import read_json_file, tokenize_titles, generate_statistics, preprocess_text, tokenize_and_stem_titles
+from build_index import build_inverse_index, build_positional_index
 
-def save_statistics_to_json(statistics, filename):
+
+
+def custom_json_serializer(data):
+    """ Custom serialization to put each list on a single line """
+    parts = []
+    for key, value in data.items():
+        serialized_value = json.dumps(value)
+        parts.append(f'    "{key}": {serialized_value}')
+    return "{\n" + ",\n".join(parts) + "\n}"
+
+def save_index_to_json(data, filename):
     with open(filename, 'w') as file:
-        json.dump(statistics, file, indent=4)
-
+        file.write(custom_json_serializer(data))
 def main():
     file_path = 'crawled_urls.json'
     data = read_json_file(file_path)
@@ -14,14 +22,22 @@ def main():
     # Generate statistics
     tokenized_titles = tokenize_titles(data)
     stats = generate_statistics(data, tokenized_titles)
-    save_statistics_to_json(stats, 'metadata.json')
+    save_index_to_json(stats, 'metadata.json')
     print("Statistics saved to metadata.json")
 
     # Build the original inverse index (without stemming)
     inverse_index = build_inverse_index(tokenized_titles)
     save_index_to_json(inverse_index, 'title.non_pos_index.json')
     print("Original Inverse index saved to title.non_pos_index.json")
+    # BUild the stemmed inverse index
+    stemmed_titles = tokenize_and_stem_titles(data)
+    stemmed_inverse_index = build_inverse_index(stemmed_titles)
+    save_index_to_json(stemmed_inverse_index, 'mon_stemmer.title.non_pos_index.json')
+    print("Stemmed Inverse index saved to mon_stemmer.non_index_pos.json")
 
+    positional_index = build_positional_index(tokenized_titles)
+    save_index_to_json(positional_index, 'title.pos_index.json')
+    print("Positional index saved to title.pos_index.json")
 
 if __name__ == "__main__":
     main()

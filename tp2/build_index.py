@@ -12,6 +12,16 @@ def build_inverse_index(tokenized_titles):
                 inverse_index[token].append(doc_id)
     return inverse_index
 
-def save_index_to_json(inverse_index, filename):
-    with open(filename, 'w') as file:
-        json.dump(inverse_index, file, indent=4)
+
+
+def build_positional_index(tokenized_titles):
+    positional_index = {}
+    for doc_id, tokens in enumerate(tokenized_titles):
+        for position, token in enumerate(tokens):
+            if token not in positional_index:
+                positional_index[token] = {}
+            if doc_id not in positional_index[token]:
+                positional_index[token][doc_id] = []
+            positional_index[token][doc_id].append(position)
+    return positional_index
+
