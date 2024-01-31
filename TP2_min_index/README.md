@@ -1,5 +1,4 @@
 
-```markdown
 # Constructing a Minimal Index
 
 ## Overview
