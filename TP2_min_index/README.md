@@ -3,7 +3,7 @@
 
 ## Overview
 
-This project ,titled "Constructing a Minimal Index", is an academic endeavor assigned by Lara Perinetti for the Web Indexing course at ENSAI. The primary goal of this project is to develop a minimal index for a set of web-crawled data. The project includes Python scripts for reading JSON data, preprocessing text, tokenizing and stemming (French language because most of the sites in the crawler_web.json are in french )and constructing both inverse and positional indices.
+This project titled "Constructing a Minimal Index" is an academic practical assigned by [Lara Perinetti](https://github.com/PeriLara) for the Web Indexing course at ENSAI. The primary goal of this project is to develop a minimal index for a set of web-crawled data. The project includes Python scripts for reading JSON data, preprocessing text, tokenizing and stemming (French language because most of the sites in the crawled are in french ) and constructing both inverse and positional indices.
 
 ## Installation
 
@@ -39,7 +39,7 @@ The project is structured as follows:
 
 - `main.py`: The main script that orchestrates reading data, processing, and indexing.
 - `build_index.py`: Contains functions to build both inverse and positional indices.
-- `statistics_and_stem.py`: Includes functions for preprocessing text, tokenization, stemming, and generating basic statistics.
+- `statistics_and_stem.py`: Includes functions for preprocessing text, tokenization, stemming and generating basic statistics.
 - `comparing_stemmers.py`: Includes a comparison for different stemmers to justify the chosen stimmer.
 
 Make sure to clone the repository into a directory named `TP2_min_index` to maintain consistency with the project structure.
@@ -68,5 +68,5 @@ To clone and run the project, follow these steps:
    python main.py
    ```
 
-This will run the main script, which reads the data, processes it, and builds the indices as specified.
+This will run the main script, which reads the data, processes it and builds the indices as specified.
 
