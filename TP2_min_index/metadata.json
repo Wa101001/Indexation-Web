@@ -1,0 +1,7 @@
+{
+    "Number of Documents": 13550,
+    "Total Number of Tokens": 103439,
+    "Average Tokens per Document": 7.6338745387453875,
+    "Top 10 Frequent Tokens": [["erreur", 14015], ["code", 1328], ["404", 1139], ["comment", 736], ["forum", 720], ["resolu", 691], ["fr", 559], ["microsoft", 539], ["message", 513], ["non", 437]],
+    "Top 10 Rare Tokens": [["torrent", 1], ["allowed", 1], ["only", 1], ["leeching", 1], ["219", 1], ["recurente", 1], ["redemarre", 1], ["reinitiallisation", 1], ["b120ef", 1], ["pavilion", 1]]
+}
