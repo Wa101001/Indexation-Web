@@ -10,8 +10,19 @@ def main(query):
     # Tokenize the query
     query_tokens = tokenize_query(query)
 
-    # Filter documents containing all query tokens
-    filtered_doc_ids = filter_documents({**title_index, **content_index}, query_tokens)
+    # Ask the user to choose the filter type ('AND' or 'OR')
+    filter_type = input("Choose filter type ('AND' or 'OR'): ").strip().upper()
+
+    # Validate the filter type
+    if filter_type not in ['AND', 'OR']:
+        print("Invalid filter type. Please choose 'AND' or 'OR'.")
+        return
+
+    # Filter documents based on the selected filter type
+    filtered_doc_ids = filter_documents({**title_index, **content_index}, query_tokens, filter_type)
+
+    # Rank documents based on a linear function
+    ranked_doc_ids = rank_documents(filtered_doc_ids, title_index, content_index)
 
     # Rank documents based on a linear function
     ranked_doc_ids = rank_documents(filtered_doc_ids, title_index, content_index)
@@ -36,6 +47,6 @@ def main(query):
 
 # Example usage
 if __name__ == "__main__":
-    query = input("PLease provide a query:")  
+    query = input("Please provide a query:")  
     main(query)
 

@@ -10,15 +10,25 @@ def tokenize_query(query):
     """Tokenize the query string into a list of tokens."""
     return query.lower().split()
 
-def filter_documents(index, query_tokens):
-    """Filter documents that contain all query tokens."""
+def filter_documents(index, query_tokens, filter_type='AND'):
     filtered_doc_ids = None
-    for token in query_tokens:
-        if token in index:
-            if filtered_doc_ids is None:
-                filtered_doc_ids = set(index[token])
+
+    if filter_type == 'AND':
+        for token in query_tokens:
+            if token in index:
+                if filtered_doc_ids is None:
+                    filtered_doc_ids = set(index[token])
+                else:
+                    filtered_doc_ids &= set(index[token])
             else:
-                filtered_doc_ids &= set(index[token])
-        else:
-            return set()  # If any token is not found, return an empty set
+                return set()  # If any token is not found, return an empty set
+
+    elif filter_type == 'OR':
+        for token in query_tokens:
+            if token in index:
+                if filtered_doc_ids is None:
+                    filtered_doc_ids = set(index[token])
+                else:
+                    filtered_doc_ids |= set(index[token])
+
     return filtered_doc_ids if filtered_doc_ids is not None else set()
