@@ -1,14 +1,17 @@
 from query_processing import tokenize_query, filter_documents, load_json_file
-from ranking import rank_documents
+from ranking import rank_documents_bm25
 import json
 def main(query):
     # Load indexes and documents
     title_index = load_json_file('title_pos_index.json')
+
     content_index = load_json_file('content_pos_index.json')
+    
     documents = load_json_file('documents.json')
 
     # Tokenize the query
     query_tokens = tokenize_query(query)
+
 
     # Ask the user to choose the filter type ('AND' or 'OR')
     filter_type = input("Choose filter type ('AND' or 'OR'): ").strip().upper()
@@ -19,20 +22,18 @@ def main(query):
         return
 
     # Filter documents based on the selected filter type
-    filtered_doc_ids = filter_documents({**title_index, **content_index}, query_tokens, filter_type)
+    filtered_doc_ids = [int(doc_id) for doc_id in filter_documents({**title_index, **content_index}, query_tokens, filter_type)]
 
     # Rank documents based on a linear function
-    ranked_doc_ids = rank_documents(filtered_doc_ids, title_index, content_index)
+    ranked_doc_ids = rank_documents_bm25(filtered_doc_ids, documents,query)
 
-    # Rank documents based on a linear function
-    ranked_doc_ids = rank_documents(filtered_doc_ids, title_index, content_index)
-
- # Prepare the output
+    # Prepare the output
     results = []
     for doc_id in ranked_doc_ids:
         doc_info = next((doc for doc in documents if str(doc['id']) == str(doc_id)), None)  # Ensure ID types match
         if doc_info:
             results.append({"Title": doc_info['title'], "URL": doc_info['url']})
+
 
     # Output the results including the total number of documents and number of filtered documents
     output = {
@@ -44,6 +45,7 @@ def main(query):
     # Write the output to a file
     with open('results.json', 'w', encoding='utf-8') as f:
         json.dump(output, f, indent=2)
+
 
 # Example usage
 if __name__ == "__main__":
