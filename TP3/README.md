@@ -21,10 +21,10 @@ pip install -r requirements.txt
 
 ## Usage
 
-0. **To avoid all path problems make sure you are working in the Indexation-Web/TP3 repository** to do that just execute the command ```cd TP3``` in the terminal.
-1. **Run the Main Script**: Execute `main.py` and follow the prompts to input your query and select the filter type (`AND`/`OR`). 
-
-2. **Review Results**: The script will output the ranked documents based on your query, which includes the document titles and URLs.
+0. **Clone the Repository**: If you haven't already cloned the repository, use `git clone git@github.com:Wa101001/Indexation-Web.git`
+1.  **To avoid any path-related issues, ensure that you are working within the Indexation-Web/TP3 repository**. You can do this by executing the command ```cd TP3``` in the terminal.
+2. **Run the Main Script**: Execute `main.py` and follow the prompts to input your query and select the filter type (`AND`/`OR`).
+3. **Review Results**: The script will output the ranked documents based on your query, which includes the document titles and URLs.
 
 ## Components
 
