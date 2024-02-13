@@ -21,8 +21,8 @@ pip install -r requirements.txt
 
 ## Usage
 
-
-1. **Run the Main Script**: Execute `main.py` and follow the prompts to input your query and select the filter type (`AND`/`OR`).
+0. **To avoid all path problems make sure you are working in the Indexation-Web/TP3 repository** to do that just execute the command ```bash cd TP3```
+1. **Run the Main Script**: Execute `main.py` and follow the prompts to input your query and select the filter type (`AND`/`OR`). 
 
 2. **Review Results**: The script will output the ranked documents based on your query, which includes the document titles and URLs.
 
