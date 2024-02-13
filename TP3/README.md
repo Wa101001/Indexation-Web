@@ -35,9 +35,6 @@ pip install -r requirements.txt
 ## Customization
 
 You can customize the system by modifying the `stop_words_french.txt` to adjust for your target language or by tweaking the ranking algorithms in `ranking.py` according to your specific needs.
-
-To expand the README.md with a detailed explanation of the ranking functions, you can append the following section:
-
 ## Detailed Ranking Functions Explanation
 
 This system employs two distinct approaches for ranking documents: a simple occurrence-based method and the BM25 algorithm. Each method evaluates the relevance of documents to a user's query differently, ensuring flexibility and effectiveness in search results.
