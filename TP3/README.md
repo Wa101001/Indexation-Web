@@ -62,20 +62,6 @@ The `rank_documents_bm25` function utilizes the BM25 algorithm, a more sophistic
 
 By employing the BM25 algorithm, the system can effectively rank documents in a manner that is both responsive to the query's specifics and reflective of the inherent properties of the document set.
 
-The general form of the BM25 formula for a document $d$ and a query $q$ is given by:
-$$
-\text{score}(d, q) = \sum_{i=1}^{n} \text{IDF}(q_i) \cdot \frac{f(q_i, d) \cdot (k_1 + 1)}{f(q_i, d) + k_1 \cdot (1 - b + b \cdot \frac{|d|}{\text{avgdl}})}
-$$
-where:
-- \(q_i\) is the \(i\)-th query term,
-- \(\text{IDF}(q_i)\) is the inverse document frequency of the \(i\)-th query term,
-- \(f(q_i, d)\) is the term frequency of \(q_i\) in document \(d\),
-- \(|d|\) is the length of the document \(d\) in words,
-- \(\text{avgdl}\) is the average document length in the text collection from which documents are drawn,
-- \(k_1\) and \(b\) are free parameters usually chosen, in absence of advanced optimization, as \(k_1 \in [1.2, 2.0]\) and \(b = 0.75\).
-
-
-The BM25 formula thus provides a sophisticated way of scoring documents based on their relevance to a given query, taking into account both the frequency of query terms within documents and the overall distribution of those terms across the document set.
 
 
 
