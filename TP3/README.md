@@ -1,4 +1,4 @@
-# Document Search and Ranking System
+# Query expansion and ranking
 
 This project provides a simple yet effective way to search and rank documents based on user queries. It consists of two main components: query processing and document ranking, including an implementation of the BM25 algorithm for sophisticated ranking capabilities.
 
