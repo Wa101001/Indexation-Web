@@ -32,9 +32,6 @@ pip install -r requirements.txt
 - `query_processing.py`: Contains functions for loading JSON data, tokenizing queries, and filtering documents based on query tokens.
 - `ranking.py`: Includes functions for ranking documents based on simple occurrence counts and the BM25 algorithm.
 
-## Customization
-
-You can customize the system by modifying the `stop_words_french.txt` to adjust for your target language or by tweaking the ranking algorithms in `ranking.py` according to your specific needs.
 ## Detailed Ranking Functions Explanation
 
 This system employs two distinct approaches for ranking documents: a simple occurrence-based method and the BM25 algorithm. Each method evaluates the relevance of documents to a user's query differently, ensuring flexibility and effectiveness in search results.
